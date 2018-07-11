@@ -3,6 +3,8 @@
 
 # create space config file
 . wsconfig.sh
+. file_io.sh
+
 mk_wsconfig
 
 # create default snippet spaces
@@ -16,12 +18,14 @@ else
     echo "Failed to create default snippet space. You can create it by yourself."
 fi
 
+# switch to current working snippet space.
+np=$(switch_current_snippet)
+
 # main screen ui.
 echo -e
 echo -e "===================\tSimple Code Sinppets\t==================="
-echo -e "\n # Recent Code Snippets"
+echo -e "\n # Recent Code Snippets (current snippet location : $np) \n"
+echo -e "files are below:"
+print_snippet_space $np
 
-read_wscfg
-
-
-sleep 3
+sleep 5
