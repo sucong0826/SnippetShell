@@ -26,7 +26,7 @@ mk_snippets_spaces() {
 	    mkdir -p $SNIPPETS_SPACES
 
 	    # once the default snippet folder is created, its path should be wrote into wsconfig.txt to be recorded.
-	    append_wscfg "default" "$SNIPPETS_SPACES"
+	    append_wscfg "default" "$SNIPPETS_SPACES" "(current) "
         fi
     elif [ $# -gt 0 ]
 	SPACE_NAME=$1
@@ -60,9 +60,10 @@ switch_current_snippet() {
 	else
 	    snippet_name=${line:0:$(expr $index - 1)}
 	    snippet_path=${line:$index}
-	    find_current "$line"
+	    find_current "$line" "(current)"
 	    find_res=`echo $?`
-	    if [ $res = "1" ]; then
+	    if [ "$find_res" == "1" ]
+	    then
 		# not a current space
 		is_selected "$snippet_name" "$line"
 		continue
@@ -71,6 +72,9 @@ switch_current_snippet() {
 	    fi
 	fi
     done
+
+    res="$snippet_path"
+    echo $res
 }
 
 # select any working snippet space with a specific name.
@@ -97,6 +101,10 @@ select_any_snippet() {
     fi	    
 }
 
+select_current_snippet() {
+    echo ""    
+}
+
 # read snippet space path from wsconfig.txt file.
 read_wscfg() {
     for line in $(cat wsconfig.txt)
@@ -108,7 +116,7 @@ read_wscfg() {
 	echo $prefix
     done
 	
-    sed -i '1i\a new line' wsconfig.txt
+    sed -ni '1i\a new line' wsconfig.txt
 }
 
 # read and append new name and path to wsconfig.txt file.
@@ -117,6 +125,7 @@ append_wscfg() {
     
     local snippet_space_name=$1
     local snippet_space_path=$2
+    local snippet_is_current=$3
     	
     if [ -f $WSCONFIG_F ] && [ -r $WSCONFIG_F ] && [ -w $WSCONFIG_F ]
     then
@@ -126,7 +135,8 @@ append_wscfg() {
 	    then
 		echo ""
 	    else
-		echo "$snippet_space_name=$snippet_space_path" >> $WSCONFIG_F
+		echo "The default path has been loaded."
+		echo "$snippet_is_current$snippet_space_name=$snippet_space_path" >> $WSCONFIG_F
 	    fi
 	else
 	    echo ""
@@ -141,13 +151,13 @@ append_wscfg() {
 # so a line string in wsconfig.txt will be passed in as a parameter.
 find_current() {
     cfg_line=$1
-    current="(current)"
-    if ["$cfg_line" == ""]
+    curr_str=$2
+    if [ "$cfg_line" == "" ]
     then
 	echo "You passed in a invalid config path."
 	return 1
     else
-	is_current=$(echo $cfg_line | grep "$(current)")
+	is_current=$(echo $cfg_line | grep "$curr_str")
 	if [[ "$is_current" != "" ]]
 	then
 	    return 0
@@ -164,7 +174,7 @@ find_current() {
 is_selected() {
     target=$1
     cfg_line=$2
-    is_current=$(echo $cfg_line | grep "$(target)")
+    is_current=$(echo $cfg_line | grep "$target")
     if [[ "$is_current" != "" ]]
     then
         return 0
